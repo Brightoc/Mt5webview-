@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT5 Web Terminal</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --mt5-dark-bg: #1E1E1E;
+            --mt5-light-bg: #252525;
+            --mt5-panel-bg: #2D2D2D;
+            --mt5-blue: #2A7EBA;
+            --mt5-green: #6BA543;
+            --mt5-red: #D9534F;
+            --mt5-text: #D4D4D4;
+            --mt5-text-light: #FFFFFF;
+            --mt5-border: #3E3E3E;
+            --mt5-admin-bg: #2a3f5f;
+            --mt5-admin-border: #1a2a4a;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--mt5-dark-bg);
+            color: var(--mt5-text);
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Authentication Styles */
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: var(--mt5-panel-bg);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .auth-container h3 {
+            color: var(--mt5-text-light);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            background-color: var(--mt5-dark-bg);
+            border: 1px solid var(--mt5-border);
+            color: var(--mt5-text);
+        }
+        
+        /* Main Application Styles */
+        .mt5-topbar {
+            background-color: var(--mt5-light-bg);
+            height: 40px;
+            border-bottom: 1px solid var(--mt5-border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .mt5-navbar {
+            background-color: var(--mt5-light-bg);
+            height: 30px;
+            border-bottom: 1px solid var(--mt5-border);
+            display: flex;
+        }
+        
+        .mt5-nav-item {
+            padding: 5px 15px;
+            cursor: pointer;
+            border-right: 1px solid var(--mt5-border);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+        
+        .mt5-nav-item:hover {
+            background-color: var(--mt5-panel-bg);
+        }
+        
+        .mt5-nav-item.active {
+            background-color: var(--mt5-blue);
+            color: white;
+        }
+        
+        .mt5-panel {
+            background-color: var(--mt5-panel-bg);
+            border: 1px solid var(--mt5-border);
+            margin-bottom: 5px;
+        }
+        
+        .mt5-panel-header {
+            background-color: var(--mt5-light-bg);
+            padding: 5px 10px;
+            border-bottom: 1px solid var(--mt5-border);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mt5-panel-body {
+            padding: 5px;
+        }
+        
+        /* Market Watch Styles */
+        .mt5-market-watch-item {
+            padding: 3px 5px;
+            border-bottom: 1px solid var(--mt5-border);
+            cursor: pointer;
+        }
+        
+        .mt5-market-watch-item:last-child {
+            border-bottom: none;
+        }
+        
+        .mt5-market-watch-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .mt5-symbol {
+            font-weight: bold;
+        }
+        
+        .mt5-bid {
+            color: var(--mt5-text-light);
+        }
+        
+        .mt5-ask {
+            color: var(--mt5-text-light);
+        }
+        
+        .mt5-change-up {
+            color: var(--mt5-green);
+        }
+        
+        .mt5-change-down {
+            color: var(--mt5-red);
+        }
+        
+        /* Toolbar Styles */
+        .mt5-toolbar {
+            background-color: var(--mt5-light-bg);
+            padding: 5px;
+            border-bottom: 1px solid var(--mt5-border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .mt5-toolbar-btn {
+            background-color: transparent;
+            border: 1px solid var(--mt5-border);
+            color: var(--mt5-text);
+            padding: 3px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .mt5-toolbar-btn:hover {
+            background-color: var(--mt5-panel-bg);
+        }
+        
+        .mt5-toolbar-btn.active {
+            background-color: var(--mt5-blue);
+            color: white;
+        }
+        
+        /* Chart Styles */
+        .mt5-chart-container {
+            background-color: var(--mt5-dark-bg);
+            border: 1px solid var(--mt5-border);
+            position: relative;
+            height: 400px;
+        }
+        
+        /* Trade Panel Styles */
+        .mt5-trade-panel {
+            background-color: var(--mt5-panel-bg);
+            border: 1px solid var(--mt5-border);
+            padding: 5px;
+        }
+        
+        .mt5-trade-btn {
+            width: 100%;
+            padding: 5px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .mt5-buy-btn {
+            background-color: var(--mt5-green);
+            color: white;
+        }
+        
+        .mt5-sell-btn {
+            background-color: var(--mt5-red);
+            color: white;
+        }
+        
+        /* Input Styles */
+        .mt5-input {
+            background-color: var(--mt5-dark-bg);
+            border: 1px solid var(--mt5-border);
+            color: var(--mt5-text);
+            padding: 3px 5px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        /* Table Styles */
+        .mt5-trade-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .mt5-trade-table th {
+            background-color: var(--mt5-light-bg);
+            padding: 5px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        .mt5-trade-table td {
+            padding: 5px;
+            border-bottom: 1px solid var(--mt5-border);
+        }
+        
+        .mt5-trade-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .mt5-profit {
+            color: var(--mt5-green);
+        }
+        
+        .mt5-loss {
+            color: var(--mt5-red);
+        }
+        
+        /* Status Bar Styles */
+        .mt5-status-bar {
+            background-color: var(--mt5-light-bg);
+            height: 20px;
+            border-top: 1px solid var(--mt5-border);
+            padding: 0 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Tab Styles */
+        .mt5-tab {
+            display: none;
+        }
+        
+        .mt5-tab.active {
+            display: block;
+        }
+        
+        /* Account Info Styles */
+        .mt5-account-info {
+            background-color: var(--mt5-blue);
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        /* Modal Styles */
+        .mt5-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .mt5-modal-content {
+            background-color: var(--mt5-panel-bg);
+            margin: 5% auto;
+            padding: 15px;
+            border: 1px solid var(--mt5-border);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .mt5-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .mt5-modal-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .mt5-modal-close {
+            color: var(--mt5-text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .mt5-modal-body {
+            margin-bottom: 15px;
+        }
+        
+        .mt5-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Form Group Styles */
+        .mt5-form-group {
+            margin-bottom: 10px;
+        }
+        
+        .mt5-form-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        /* Crypto Deposit Styles */
+        .crypto-address-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            background-color: var(--mt5-dark-bg);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--mt5-border);
+        }
+        
+        .crypto-address-box code {
+            flex-grow: 1;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        
+        .crypto-note, .crypto-fee {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+        
+        .crypto-note i, .crypto-fee i {
+            margin-right: 5px;
+        }
+        
+        /* Admin Dashboard Styles */
+        .admin-panel {
+            background-color: var(--mt5-admin-bg);
+            border: 1px solid var(--mt5-admin-border);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .admin-table th {
+            background-color: var(--mt5-admin-border);
+        }
+        
+        .admin-badge {
+            cursor: pointer;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .mt5-topbar {
+                height: auto;
+                padding: 5px;
+                flex-wrap: wrap;
+            }
+            
+            .mt5-navbar {
+                overflow-x: auto;
+            }
+            
+            .mt5-chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-container" style="display: none;">
+        <h3 class="text-center mb-4">MT5 Web Terminal Login</h3>
+        <div id="loginForm">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="loginUsername" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" required>
+            </div>
+            <button class="btn btn-primary w-100 mb-3" onclick="login()">Login</button>
+            <div class="text-center">
+                <a href="#" onclick="showRegisterForm()">Create new account</a>
+            </div>
+        </div>
+        
+        <div id="registerForm" style="display: none;">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="registerUsername" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="registerPassword" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="registerConfirmPassword" required>
+            </div>
+            <button class="btn btn-success w-100 mb-3" onclick="register()">Register</button>
+            <div class="text-center">
+                <a href="#" onclick="showLoginForm()">Back to login</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div id="appContainer" style="display: none;">
+        <div class="mt5-topbar">
+            <div class="me-3">
+                <i class="fas fa-chart-line me-2"></i>
+                <strong>MetaTrader 5</strong>
+            </div>
+            <div class="me-3">
+                <span>Account: <span id="accountNumber">12345678</span></span>
+            </div>
+            <div class="me-3">
+                <span>Balance: <span id="accountBalance">$2,500.00</span></span>
+            </div>
+            <div class="me-3">
+                <span>Equity: <span id="accountEquity">$2,645.32</span></span>
+            </div>
+            <div class="me-3">
+                <span>Free Margin: <span id="accountFreeMargin">$2,324.82</span></span>
+            </div>
+            <div class="ms-auto d-flex">
+                <button class="btn btn-sm btn-success me-2" onclick="openModal('deposit')">
+                    <i class="fas fa-plus me-1"></i> Deposit
+                </button>
+                <button class="btn btn-sm btn-primary me-2" onclick="openModal('withdraw')">
+                    <i class="fas fa-download me-1"></i> Withdraw
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt5-navbar">
+            <div class="mt5-nav-item active" onclick="switchTab('market')">
+                <i class="fas fa-chart-bar me-1"></i> Market Watch
+            </div>
+            <div class="mt5-nav-item" onclick="switchTab('terminal')">
+                <i class="fas fa-terminal me-1"></i> Terminal
+            </div>
+            <div class="mt5-nav-item" onclick="switchTab('history')">
+                <i class="fas fa-history me-1"></i> History
+            </div>
+            <div class="mt5-nav-item" onclick="switchTab('admin')" id="adminTabButton" style="display: none;">
+                <i class="fas fa-user-shield me-1"></i> Admin
+            </div>
+        </div>
+        
+        <div class="container-fluid p-0">
+            <div class="row g-0">
+                <div class="col-md-2 p-1" style="background-color: var(--mt5-light-bg);">
+                    <div class="mt5-panel">
+                        <div class="mt5-panel-header">
+                            <span>Market Watch</span>
+                        </div>
+                        <div class="mt5-panel-body">
+                            <div class="mt5-market-watch-item" onclick="loadChart('EURUSD')">
+                                <div class="d-flex justify-content-between">
+                                    <span class="mt5-symbol">EURUSD</span>
+                                    <span class="mt5-bid" id="EURUSD_bid">1.0854</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="mt5-ask" id="EURUSD_ask">1.0856</span>
+                                    <span class="mt5-change-up" id="EURUSD_change">+0.12% <i class="fas fa-arrow-up"></i></span>
+                                </div>
+                            </div>
+                            <div class="mt5-market-watch-item" onclick="loadChart('GBPUSD')">
+                                <div class="d-flex justify-content-between">
+                                    <span class="mt5-symbol">GBPUSD</span>
+                                    <span class="mt5-bid" id="GBPUSD_bid">1.2658</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="mt5-ask" id="GBPUSD_ask">1.2660</span>
+                                    <span class="mt5-change-down" id="GBPUSD_change">-0.24% <i class="fas fa-arrow-down"></i></span>
+                                </div>
+                            </div>
+                            <div class="mt5-market-watch-item" onclick="loadChart('XAUUSD')">
+                                <div class="d-flex justify-content-between">
+                                    <span class="mt5-symbol">XAUUSD</span>
+                                    <span class="mt5-bid" id="XAUUSD_bid">1985.34</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="mt5-ask" id="XAUUSD_ask">1985.54</span>
+                                    <span class="mt5-change-up" id="XAUUSD_change">+0.42% <i class="fas fa-arrow-up"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt5-panel">
+                        <div class="mt5-panel-header">
+                            Navigator
+                        </div>
+                        <div class="mt5-panel-body">
+                            <div class="mt5-account-info">
+                                <div>Account #<span id="navAccountNumber">12345678</span></div>
+                                <div id="navAccountBalance">$2,500.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col p-1">
+                    <div id="marketTab" class="mt5-tab active">
+                        <div class="mt5-toolbar">
+                            <button class="mt5-toolbar-btn" onclick="changeChartTimeframe('1', event)">M1</button>
+                            <button class="mt5-toolbar-btn" onclick="changeChartTimeframe('5', event)">M5</button>
+                            <button class="mt5-toolbar-btn active" onclick="changeChartTimeframe('60', event)">H1</button>
+                            <button class="mt5-toolbar-btn" onclick="changeChartTimeframe('1D', event)">D1</button>
+                        </div>
+                        
+                        <div class="mt5-chart-container mb-2">
+                            <div id="tradingview_chart" class="tradingview-widget-container"></div>
+                        </div>
+                        
+                        <div class="mt5-panel">
+                            <div class="mt5-panel-header">
+                                <span>Quick Trade</span>
+                            </div>
+                            <div class="mt5-panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mt5-trade-panel">
+                                            <div class="mb-2">
+                                                <label>Symbol</label>
+                                                <select class="mt5-input" id="trade_symbol">
+                                                    <option>EURUSD</option>
+                                                    <option>GBPUSD</option>
+                                                    <option>XAUUSD</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label>Volume (lots)</label>
+                                                <input type="number" step="0.01" min="0.01" class="mt5-input" id="trade_volume" value="0.1">
+                                            </div>
+                                            <button class="mt5-trade-btn mt5-buy-btn" onclick="placeTrade('buy')">Buy</button>
+                                            <button class="mt5-trade-btn mt5-sell-btn" onclick="placeTrade('sell')">Sell</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="table-responsive">
+                                            <table class="mt5-trade-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Symbol</th>
+                                                        <th>Type</th>
+                                                        <th>Volume</th>
+                                                        <th>Profit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="positionsTable">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="terminalTab" class="mt5-tab">
+                        <div class="mt5-panel">
+                            <div class="mt5-panel-header">
+                                <span>Trade History</span>
+                            </div>
+                            <div class="mt5-panel-body">
+                                <div class="table-responsive">
+                                    <table class="mt5-trade-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Ticket</th>
+                                                <th>Symbol</th>
+                                                <th>Type</th>
+                                                <th>Volume</th>
+                                                <th>Profit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tradeHistoryTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="historyTab" class="mt5-tab">
+                        <div class="mt5-panel">
+                            <div class="mt5-panel-header">
+                                <span>Account History</span>
+                            </div>
+                            <div class="mt5-panel-body">
+                                <div class="table-responsive">
+                                    <table class="mt5-trade-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="accountHistoryTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="adminTab" class="mt5-tab">
+                        <div class="admin-panel">
+                            <h4><i class="fas fa-user-shield me-2"></i>Administration Dashboard</h4>
+                            <div class="mt5-toolbar mb-3">
+                                <button class="mt5-toolbar-btn active" onclick="showAdminSection('pending')">
+                                    Pending Deposits
+                                </button>
+                                <button class="mt5-toolbar-btn" onclick="showAdminSection('users')">
+                                    User Accounts
+                                </button>
+                                <button class="mt5-toolbar-btn" onclick="showAdminSection('transactions')">
+                                    All Transactions
+                                </button>
+                            </div>
+                            
+                            <div id="pendingDepositsSection">
+                                <h5>Pending Deposits</h5>
+                                <div class="table-responsive">
+                                    <table class="mt5-trade-table admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>User</th>
+                                                <th>Amount</th>
+                                                <th>Method</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pendingDepositsTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="userAccountsSection" style="display: none;">
+                                <h5>User Accounts</h5>
+                                <div class="table-responsive">
+                                    <table class="mt5-trade-table admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Account #</th>
+                                                <th>Balance</th>
+                                                <th>Last Login</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="userAccountsTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="allTransactionsSection" style="display: none;">
+                                <h5>All Transactions</h5>
+                                <div class="table-responsive">
+                                    <table class="mt5-trade-table admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>User</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allTransactionsTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt5-status-bar">
+            <div class="me-3" id="statusSymbol">EURUSD: Bid=1.0854 Ask=1.0856 Spread=2.0</div>
+            <div class="me-3">Server: LiveTrade#25 (Ping: 24ms)</div>
+        </div>
+
+        <!-- Deposit Modal -->
+        <div id="depositModal" class="mt5-modal">
+            <div class="mt5-modal-content">
+                <div class="mt5-modal-header">
+                    <div class="mt5-modal-title">Deposit Funds</div>
+                    <span class="mt5-modal-close" onclick="closeModal('deposit')">&times;</span>
+                </div>
+                <div class="mt5-modal-body">
+                    <div class="mt5-form-group">
+                        <label class="mt5-form-label">Amount (USD)</label>
+                        <input type="number" class="mt5-input" id="depositAmount" min="10" placeholder="Enter amount in USD">
+                    </div>
+                    <div class="mt5-form-group">
+                        <label class="mt5-form-label">Payment Method</label>
+                        <select class="mt5-input" id="depositMethod" onchange="showCryptoDetails()">
+                            <option value="crypto">Cryptocurrency</option>
+                            <option value="bank">Bank Transfer</option>
+                        </select>
+                    </div>
+                    
+                    <div id="cryptoDetails">
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Select Cryptocurrency</label>
+                            <select class="mt5-input" id="cryptoType" onchange="updateCryptoAddress()">
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                                <option value="USDT">Tether (USDT-ERC20)</option>
+                                <option value="USDC">USD Coin (USDC)</option>
+                                <option value="LTC">Litecoin (LTC)</option>
+                            </select>
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Deposit Address</label>
+                            <div class="crypto-address-box">
+                                <code id="walletAddress">1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</code>
+                                <button class="mt5-toolbar-btn" onclick="copyToClipboard('walletAddress')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <p class="crypto-note">
+                                <i class="fas fa-exclamation-circle"></i> Send only <span id="selectedCrypto">BTC</span> to this address. 
+                                Minimum deposit: $10 equivalent.
+                            </p>
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Network Confirmation</label>
+                            <p class="crypto-fee">
+                                <i class="fas fa-info-circle"></i> Transactions typically require 1-3 network confirmations. 
+                                Processing time depends on blockchain congestion.
+                            </p>
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">QR Code</label>
+                            <div id="qrCodeContainer" style="background: white; padding: 10px; width: 150px; height: 150px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                                <span style="color: black;">QR Code would appear here</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="bankDetails" style="display: none;">
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Bank Name</label>
+                            <input type="text" class="mt5-input" id="bankName" placeholder="Enter bank name">
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Account Holder</label>
+                            <input type="text" class="mt5-input" id="accountHolder" placeholder="Enter account holder name">
+                        </div>
+                        <div class="mt5-form-group">
+                            <p>After submission, you will receive bank transfer details via email.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt5-modal-footer">
+                    <button class="mt5-toolbar-btn" onclick="closeModal('deposit')">Cancel</button>
+                    <button class="mt5-toolbar-btn" style="background-color: var(--mt5-green); color: white;" onclick="processDeposit()">
+                        Submit Deposit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdraw Modal -->
+        <div id="withdrawModal" class="mt5-modal">
+            <div class="mt5-modal-content">
+                <div class="mt5-modal-header">
+                    <div class="mt5-modal-title">Withdraw Funds</div>
+                    <span class="mt5-modal-close" onclick="closeModal('withdraw')">&times;</span>
+                </div>
+                <div class="mt5-modal-body">
+                    <div class="mt5-form-group">
+                        <label class="mt5-form-label">Amount</label>
+                        <input type="number" class="mt5-input" id="withdrawAmount" min="10">
+                    </div>
+                    <div class="mt5-form-group">
+                        <label class="mt5-form-label">Payment Method</label>
+                        <select class="mt5-input" id="withdrawMethod" onchange="showWithdrawDetails()">
+                            <option value="bank">Bank Transfer</option>
+                            <option value="crypto">Cryptocurrency</option>
+                            <option value="paypal">PayPal</option>
+                        </select>
+                    </div>
+                    
+                    <div id="bankWithdrawDetails">
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Bank Account Number</label>
+                            <input type="text" class="mt5-input" id="bankAccountNumber" placeholder="Enter account number">
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Routing Number</label>
+                            <input type="text" class="mt5-input" id="routingNumber" placeholder="Enter routing number">
+                        </div>
+                    </div>
+                    
+                    <div id="cryptoWithdrawDetails" style="display: none;">
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Cryptocurrency</label>
+                            <select class="mt5-input" id="withdrawCryptoType">
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                                <option value="USDT">Tether (USDT-ERC20)</option>
+                            </select>
+                        </div>
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">Wallet Address</label>
+                            <input type="text" class="mt5-input" id="withdrawWalletAddress" placeholder="Enter your wallet address">
+                        </div>
+                    </div>
+                    
+                    <div id="paypalWithdrawDetails" style="display: none;">
+                        <div class="mt5-form-group">
+                            <label class="mt5-form-label">PayPal Email</label>
+                            <input type="email" class="mt5-input" id="paypalEmail" placeholder="Enter your PayPal email">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt5-modal-footer">
+                    <button class="mt5-toolbar-btn" onclick="closeModal('withdraw')">Cancel</button>
+                    <button class="mt5-toolbar-btn" style="background-color: var(--mt5-blue); color: white;" onclick="processWithdrawal()">
+                        Submit Withdrawal Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let currentSymbol = 'EURUSD';
+        let currentTimeframe = '60';
+        let tvWidget = null;
+        let currentUser = null;
+        let isAdmin = false;
+        
+        // Admin credentials (in a real app, use proper authentication)
+        const ADMIN_USERNAME = "admin";
+        const ADMIN_PASSWORD = "admin123";
+        
+        // Default user data structure
+        const defaultUserData = {
+            accountNumber: Math.floor(10000000 + Math.random() * 90000000),
+            balance: 0,
+            equity: 0,
+            freeMargin: 0,
+            positions: [],
+            tradeHistory: [],
+            accountHistory: [],
+            cryptoAddresses: {
+                BTC: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5',
+                ETH: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+                USDT: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+                USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+                LTC: 'LRXH5YMPokf2tYe3rTD5K6jRRtXJQk3XhF'
+            },
+            lastLogin: null,
+            isAdmin: false
+        };
+        
+        // Initialize application
+        function initApp() {
+            // Check if user is logged in
+            const loggedInUser = localStorage.getItem('mt5_loggedInUser');
+            if (loggedInUser) {
+                currentUser = JSON.parse(localStorage.getItem(`mt5_user_${loggedInUser}`));
+                isAdmin = currentUser.username === ADMIN_USERNAME;
+                showApp();
+                
+                if (isAdmin) {
+                    showAdminTab();
+                    loadAdminData();
+                }
+            } else {
+                showAuth();
+            }
+            
+            // Initialize TradingView if user is logged in
+            if (currentUser) {
+                initTradingView();
+                simulatePriceChanges();
+                generateSampleData();
+                updateAllDisplays();
+            }
+        }
+        
+        // Show authentication screen
+        function showAuth() {
+            document.getElementById('authScreen').style.display = 'block';
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+        
+        // Show application
+        function showApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            
+            // Set initial prices
+            document.getElementById('EURUSD_bid').textContent = '1.0854';
+            document.getElementById('EURUSD_ask').textContent = '1.0856';
+            document.getElementById('GBPUSD_bid').textContent = '1.2658';
+            document.getElementById('GBPUSD_ask').textContent = '1.2660';
+            document.getElementById('XAUUSD_bid').textContent = '1985.34';
+            document.getElementById('XAUUSD_ask').textContent = '1985.54';
+            
+            // Set initial status bar
+            updateStatusBar();
+            
+            // Show appropriate tab
+            if (isAdmin) {
+                switchTab('admin');
+            } else {
+                switchTab('market');
+            }
+        }
+        
+        // Show admin tab
+        function showAdminTab() {
+            document.getElementById('adminTabButton').style.display = 'flex';
+        }
+        
+        // Show login form
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+        
+        // Show register form
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+        
+        // User registration
+        function register() {
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            if (localStorage.getItem(`mt5_user_${username}`)) {
+                alert('Username already exists');
+                return;
+            }
+            
+            // Create new user
+            const userData = {
+                ...defaultUserData,
+                username,
+                password, // Note: In a real app, you should hash the password
+                balance: 1000, // Starting balance
+                equity: 1000,
+                freeMargin: 900,
+                lastLogin: new Date()
+            };
+            
+            // Save user data
+            localStorage.setItem(`mt5_user_${username}`, JSON.stringify(userData));
+            
+            // Log in the new user
+            loginUser(username);
+        }
+        
+        // User login
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+            
+            // Check for admin login
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                isAdmin = true;
+                currentUser = {
+                    username: ADMIN_USERNAME,
+                    isAdmin: true,
+                    lastLogin: new Date()
+                };
+                
+                // Save admin login state
+                localStorage.setItem('mt5_loggedInUser', ADMIN_USERNAME);
+                localStorage.setItem(`mt5_user_${ADMIN_USERNAME}`, JSON.stringify(currentUser));
+                
+                showApp();
+                showAdminTab();
+                loadAdminData();
+                return;
+            }
+            
+            const userData = JSON.parse(localStorage.getItem(`mt5_user_${username}`));
+            
+            if (!userData || userData.password !== password) {
+                alert('Invalid username or password');
+                return;
+            }
+            
+            loginUser(username);
+        }
+        
+        // Login helper function
+        function loginUser(username) {
+            // Update last login
+            const userData = JSON.parse(localStorage.getItem(`mt5_user_${username}`));
+            userData.lastLogin = new Date();
+            localStorage.setItem(`mt5_user_${username}`, JSON.stringify(userData));
+            
+            // Set current user
+            localStorage.setItem('mt5_loggedInUser', username);
+            currentUser = userData;
+            isAdmin = false;
+            
+            showApp();
+            initTradingView();
+            simulatePriceChanges();
+            updateAllDisplays();
+        }
+        
+        // User logout
+        function logout() {
+            localStorage.removeItem('mt5_loggedInUser');
+            currentUser = null;
+            isAdmin = false;
+            showAuth();
+        }
+        
+        // Save user data to localStorage
+        function saveUserData() {
+            if (currentUser) {
+                localStorage.setItem(`mt5_user_${currentUser.username}`, JSON.stringify(currentUser));
+            }
+        }
+        
+        // Initialize TradingView widget
+        function initTradingView() {
+            if(typeof TradingView !== 'undefined') {
+                tvWidget = new TradingView.widget({
+                    "autosize": true,
+                    "symbol": currentSymbol,
+                    "interval": currentTimeframe,
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#252525",
+                    "enable_publishing": false,
+                    "hide_top_toolbar": false,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": false,
+                    "container_id": "tradingview_chart"
+                });
+            }
+        }
+        
+        // Load chart for symbol
+        function loadChart(symbol) {
+            currentSymbol = symbol;
+            if(tvWidget) {
+                tvWidget.chart().setSymbol(symbol);
+                updateStatusBar();
+            }
+        }
+        
+        // Change chart timeframe
+        function changeChartTimeframe(timeframe, event) {
+            currentTimeframe = timeframe;
+            if(tvWidget) {
+                tvWidget.chart().setResolution(timeframe);
+                // Update active button
+                document.querySelectorAll('.mt5-toolbar-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+        }
+        
+        // Place a trade
+        function placeTrade(type) {
+            if (!currentUser) return;
+            
+            const symbol = document.getElementById('trade_symbol').value;
+            const volume = parseFloat(document.getElementById('trade_volume').value);
+            
+            if(isNaN(volume) || volume <= 0) {
+                alert('Please enter valid volume');
+                return;
+            }
+            
+            const marginRequired = volume * 1000;
+            if(marginRequired > currentUser.freeMargin) {
+                alert('Insufficient margin');
+                return;
+            }
+            
+            const ticket = Math.floor(Math.random() * 90000) + 10000;
+            const price = type === 'buy' ? 
+                parseFloat(document.getElementById(`${symbol}_ask`).textContent) : 
+                parseFloat(document.getElementById(`${symbol}_bid`).textContent);
+            
+            currentUser.positions.push({
+                ticket,
+                symbol,
+                type: type === 'buy' ? 'Buy' : 'Sell',
+                volume,
+                price,
+                openTime: new Date(),
+                profit: 0
+            });
+            
+            currentUser.freeMargin -= marginRequired;
+            saveUserData();
+            updateAllDisplays();
+            
+            alert(`${type} order placed for ${volume} lots of ${symbol}`);
+        }
+        
+        // Close position
+        function closePosition(ticket) {
+            if (!currentUser) return;
+            
+            const index = currentUser.positions.findIndex(p => p.ticket === ticket);
+            if(index === -1) return;
+            
+            const position = currentUser.positions[index];
+            const profit = position.profit;
+            
+            currentUser.tradeHistory.push({
+                ...position,
+                closeTime: new Date()
+            });
+            
+            currentUser.balance += profit;
+            currentUser.equity = currentUser.balance;
+            currentUser.freeMargin += position.volume * 1000;
+            
+            currentUser.positions.splice(index, 1);
+            
+            // Add to account history
+            currentUser.accountHistory.unshift({
+                date: new Date(),
+                type: 'Trade Close',
+                amount: profit,
+                balance: currentUser.balance
+            });
+            
+            saveUserData();
+            updateAllDisplays();
+        }
+        
+        // Update all displays
+        function updateAllDisplays() {
+            if (!currentUser) return;
+            
+            updateAccountDisplay();
+            updatePositionsTable();
+            updateTradeHistoryTable();
+            updateAccountHistory();
+            updateStatusBar();
+        }
+        
+        // Update positions table
+        function updatePositionsTable() {
+            const table = document.getElementById('positionsTable');
+            table.innerHTML = '';
+            
+            if (!currentUser) return;
+            
+            currentUser.positions.forEach(pos => {
+                const profitClass = pos.profit >= 0 ? 'mt5-profit' : 'mt5-loss';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${pos.symbol}</td>
+                    <td><span class="badge ${pos.type === 'Buy' ? 'bg-success' : 'bg-danger'}">${pos.type}</span></td>
+                    <td>${pos.volume.toFixed(2)}</td>
+                    <td class="${profitClass}">${pos.profit >= 0 ? '+' : ''}${pos.profit.toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="closePosition(${pos.ticket})">Close</button></td>
+                `;
+                table.appendChild(row);
+            });
+        }
+        
+        // Update trade history
+        function updateTradeHistoryTable() {
+            const table = document.getElementById('tradeHistoryTable');
+            table.innerHTML = '';
+            
+            if (!currentUser) return;
+            
+            currentUser.tradeHistory.forEach(trade => {
+                const profitClass = trade.profit >= 0 ? 'mt5-profit' : 'mt5-loss';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${trade.ticket}</td>
+                    <td>${trade.symbol}</td>
+                    <td><span class="badge ${trade.type === 'Buy' ? 'bg-success' : 'bg-danger'}">${trade.type}</span></td>
+                    <td>${trade.volume.toFixed(2)}</td>
+                    <td class="${profitClass}">${trade.profit >= 0 ? '+' : ''}${trade.profit.toFixed(2)}</td>
+                `;
+                table.appendChild(row);
+            });
+        }
+        
+        // Update account history
+        function updateAccountHistory() {
+            const table = document.getElementById('accountHistoryTable');
+            table.innerHTML = '';
+            
+            if (!currentUser) return;
+            
+            currentUser.accountHistory.forEach(item => {
+                const amountClass = item.amount >= 0 ? 'mt5-profit' : 'mt5-loss';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(item.date)}</td>
+                    <td>${item.type}</td>
+                    <td class="${amountClass}">${item.amount >= 0 ? '+' : ''}${Math.abs(item.amount).toFixed(2)}</td>
+                    <td>${item.balance.toFixed(2)}</td>
+                `;
+                table.appendChild(row);
+            });
+        }
+        
+        // Update account display
+        function updateAccountDisplay() {
+            if (!currentUser) return;
+            
+            document.getElementById('accountNumber').textContent = currentUser.accountNumber;
+            document.getElementById('accountBalance').textContent = `$${currentUser.balance.toFixed(2)}`;
+            document.getElementById('accountEquity').textContent = `$${currentUser.equity.toFixed(2)}`;
+            document.getElementById('accountFreeMargin').textContent = `$${currentUser.freeMargin.toFixed(2)}`;
+            document.getElementById('navAccountNumber').textContent = currentUser.accountNumber;
+            document.getElementById('navAccountBalance').textContent = `$${currentUser.balance.toFixed(2)}`;
+        }
+        
+        // Update status bar
+        function updateStatusBar() {
+            const bid = document.getElementById(`${currentSymbol}_bid`).textContent;
+            const ask = document.getElementById(`${currentSymbol}_ask`).textContent;
+            document.getElementById('statusSymbol').textContent = `${currentSymbol}: Bid=${bid} Ask=${ask}`;
+        }
+        
+        // Format date
+        function formatDate(date) {
+            return new Date(date).toLocaleString();
+        }
+        
+        // Simulate price changes
+        function simulatePriceChanges() {
+            setInterval(() => {
+                ['EURUSD', 'GBPUSD', 'XAUUSD'].forEach(symbol => {
+                    const bidElement = document.getElementById(`${symbol}_bid`);
+                    const askElement = document.getElementById(`${symbol}_ask`);
+                    const changeElement = document.getElementById(`${symbol}_change`);
+                    
+                    if(bidElement && askElement && changeElement) {
+                        const currentBid = parseFloat(bidElement.textContent);
+                        const change = (Math.random() - 0.5) * (symbol === 'XAUUSD' ? 2 : 0.0005);
+                        const newBid = currentBid + change;
+                        const newAsk = newBid + (symbol === 'XAUUSD' ? 0.2 : 0.0002);
+                        
+                        bidElement.textContent = newBid.toFixed(symbol === 'XAUUSD' ? 2 : 4);
+                        askElement.textContent = newAsk.toFixed(symbol === 'XAUUSD' ? 2 : 4);
+                        
+                        const percentChange = (change / currentBid * 100).toFixed(2);
+                        if(percentChange >= 0) {
+                            changeElement.className = 'mt5-change-up';
+                            changeElement.innerHTML = `+${percentChange}% <i class="fas fa-arrow-up"></i>`;
+                        } else {
+                            changeElement.className = 'mt5-change-down';
+                            changeElement.innerHTML = `${percentChange}% <i class="fas fa-arrow-down"></i>`;
+                        }
+                        
+                        // Update positions if user is logged in
+                        if (currentUser) {
+                            currentUser.positions.forEach(pos => {
+                                if(pos.symbol === symbol) {
+                                    pos.profit = pos.type === 'Buy' ? 
+                                        (newBid - pos.price) * pos.volume * (symbol === 'XAUUSD' ? 100 : 10000) :
+                                        (pos.price - newAsk) * pos.volume * (symbol === 'XAUUSD' ? 100 : 10000);
+                                }
+                            });
+                            
+                            currentUser.equity = currentUser.balance + currentUser.positions.reduce((sum, pos) => sum + pos.profit, 0);
+                            saveUserData();
+                            updateAllDisplays();
+                        }
+                    }
+                });
+            }, 2000);
+        }
+        
+        // Generate sample data for new users
+        function generateSampleData() {
+            if (!currentUser || currentUser.tradeHistory.length > 0) return;
+            
+            const now = new Date();
+            
+            // Add some trades to history
+            for(let i = 0; i < 10; i++) {
+                const symbol = Math.random() > 0.66 ? 'XAUUSD' : (Math.random() > 0.5 ? 'EURUSD' : 'GBPUSD');
+                currentUser.tradeHistory.push({
+                    ticket: Math.floor(Math.random() * 90000) + 10000,
+                    symbol: symbol,
+                    type: Math.random() > 0.5 ? 'Buy' : 'Sell',
+                    volume: parseFloat((Math.random() * 0.9 + 0.1).toFixed(2)),
+                    profit: parseFloat((Math.random() * 200 - 50).toFixed(2)),
+                    openTime: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+                    closeTime: new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+                });
+            }
+            
+            // Add some account history
+            currentUser.accountHistory.push(
+                {
+                    date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+                    type: 'Initial Deposit',
+                    amount: 1000,
+                    balance: 1000
+                },
+                {
+                    date: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
+                    type: 'Trade Profit',
+                    amount: 125.50,
+                    balance: 1125.50
+                },
+                {
+                    date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
+                    type: 'Trade Loss',
+                    amount: -75.25,
+                    balance: 1050.25
+                }
+            );
+            
+            saveUserData();
+        }
+        
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.mt5-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.mt5-nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`${tab}Tab`).classList.add('active');
+            
+            // Find the clicked tab button and activate it
+            const tabButtons = document.querySelectorAll('.mt5-nav-item');
+            for (let i = 0; i < tabButtons.length; i++) {
+                if (tabButtons[i].getAttribute('onclick').includes(`'${tab}'`)) {
+                    tabButtons[i].classList.add('active');
+                    break;
+                }
+            }
+        }
+        
+        // Open modal
+        function openModal(type) {
+            document.getElementById(`${type}Modal`).style.display = 'block';
+            
+            if (type === 'deposit') {
+                updateCryptoAddress();
+            }
+        }
+        
+        // Close modal
+        function closeModal(type) {
+            document.getElementById(`${type}Modal`).style.display = 'none';
+        }
+        
+        // Show/hide crypto details based on payment method
+        function showCryptoDetails() {
+            const method = document.getElementById('depositMethod').value;
+            document.getElementById('cryptoDetails').style.display = method === 'crypto' ? 'block' : 'none';
+            document.getElementById('bankDetails').style.display = method === 'bank' ? 'block' : 'none';
+        }
+        
+        // Show/hide withdraw details based on payment method
+        function showWithdrawDetails() {
+            const method = document.getElementById('withdrawMethod').value;
+            document.getElementById('bankWithdrawDetails').style.display = method === 'bank' ? 'block' : 'none';
+            document.getElementById('cryptoWithdrawDetails').style.display = method === 'crypto' ? 'block' : 'none';
+            document.getElementById('paypalWithdrawDetails').style.display = method === 'paypal' ? 'block' : 'none';
+        }
+        
+        // Update wallet address when crypto type changes
+        function updateCryptoAddress() {
+            if (!currentUser) return;
+            
+            const cryptoType = document.getElementById('cryptoType').value;
+            document.getElementById('selectedCrypto').textContent = cryptoType;
+            document.getElementById('walletAddress').textContent = currentUser.cryptoAddresses[cryptoType];
+        }
+        
+        // Copy wallet address to clipboard
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Wallet address copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+        
+        // Process deposit
+        function processDeposit() {
+            if (!currentUser) return;
+            
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            const method = document.getElementById('depositMethod').value;
+            
+            if(isNaN(amount) || amount < 10) {
+                alert('Minimum deposit amount is $10');
+                return;
+            }
+            
+            // Create pending transaction
+            const depositType = method === 'crypto' ? 'Crypto Deposit Pending' : 'Bank Deposit Pending';
+            currentUser.accountHistory.unshift({
+                date: new Date().toISOString(), // Store as string for comparison
+                type: depositType,
+                amount: amount,
+                balance: currentUser.balance,
+                method: method,
+                cryptoType: method === 'crypto' ? document.getElementById('cryptoType').value : null,
+                bankDetails: method === 'bank' ? {
+                    bankName: document.getElementById('bankName').value,
+                    accountHolder: document.getElementById('accountHolder').value
+                } : null
+            });
+            
+            saveUserData();
+            updateAccountHistory();
+            closeModal('deposit');
+            
+            alert(`${depositType} request submitted. Your deposit will be processed after verification.`);
+            
+            // If admin is viewing, refresh their data
+            if (isAdmin) {
+                loadAdminData();
+            }
+        }
+        
+        // Process withdrawal
+        function processWithdrawal() {
+            if (!currentUser) return;
+            
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            
+            if(isNaN(amount) || amount <= 0) {
+                alert('Please enter valid amount');
+                return;
+            }
+            
+            if(amount > currentUser.balance) {
+                alert('Insufficient funds');
+                return;
+            }
+            
+            // Create pending withdrawal
+            const withdrawType = `Withdrawal Pending (${method})`;
+            currentUser.accountHistory.unshift({
+                date: new Date().toISOString(),
+                type: withdrawType,
+                amount: -amount,
+                balance: currentUser.balance,
+                method: method,
+                details: {
+                    bankAccount: method === 'bank' ? document.getElementById('bankAccountNumber').value : null,
+                    cryptoAddress: method === 'crypto' ? document.getElementById('withdrawWalletAddress').value : null,
+                    paypalEmail: method === 'paypal' ? document.getElementById('paypalEmail').value : null
+                }
+            });
+            
+            saveUserData();
+            updateAccountHistory();
+            closeModal('withdraw');
+            
+            alert(`Withdrawal request for $${amount.toFixed(2)} via ${method} submitted. Processing may take 1-3 business days.`);
+            
+            // If admin is viewing, refresh their data
+            if (isAdmin) {
+                loadAdminData();
+            }
+        }
+        
+        /* ADMIN FUNCTIONS */
+        
+        // Show admin section
+        function showAdminSection(section) {
+            document.getElementById('pendingDepositsSection').style.display = 
+                section === 'pending' ? 'block' : 'none';
+            document.getElementById('userAccountsSection').style.display = 
+                section === 'users' ? 'block' : 'none';
+            document.getElementById('allTransactionsSection').style.display = 
+                section === 'transactions' ? 'block' : 'none';
+            
+            // Update active button
+            document.querySelectorAll('#adminTab .mt5-toolbar-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Load data if needed
+            if (section === 'transactions') {
+                loadAllTransactions();
+            }
+        }
+        
+        // Load admin data
+        function loadAdminData() {
+            if (!isAdmin) return;
+            
+            // Load pending deposits
+            const pendingDeposits = [];
+            const pendingWithdrawals = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mt5_user_') && !key.endsWith(ADMIN_USERNAME)) {
+                    const user = JSON.parse(localStorage.getItem(key));
+                    
+                    user.accountHistory.forEach(transaction => {
+                        if (transaction.type.includes('Pending')) {
+                            if (transaction.type.includes('Deposit')) {
+                                pendingDeposits.push({
+                                    username: user.username,
+                                    ...transaction
+                                });
+                            } else if (transaction.type.includes('Withdrawal')) {
+                                pendingWithdrawals.push({
+                                    username: user.username,
+                                    ...transaction
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Populate pending deposits table
+            const pendingTable = document.getElementById('pendingDepositsTable');
+            pendingTable.innerHTML = '';
+            
+            [...pendingDeposits, ...pendingWithdrawals].forEach(transaction => {
+                const isDeposit = transaction.type.includes('Deposit');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.username}</td>
+                    <td>$${Math.abs(transaction.amount).toFixed(2)}</td>
+                    <td>${isDeposit ? (transaction.method === 'crypto' ? 'Crypto' : 'Bank') : transaction.method}</td>
+                    <td><span class="badge bg-warning">Pending</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-success me-1" onclick="approveTransaction('${transaction.username}', '${transaction.date}', ${transaction.amount}, '${transaction.type}')">
+                            Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectTransaction('${transaction.username}', '${transaction.date}')">
+                            Reject
+                        </button>
+                    </td>
+                `;
+                pendingTable.appendChild(row);
+            });
+            
+            // Load user accounts
+            const usersTable = document.getElementById('userAccountsTable');
+            usersTable.innerHTML = '';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mt5_user_') && !key.endsWith(ADMIN_USERNAME)) {
+                    const user = JSON.parse(localStorage.getItem(key));
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.username}</td>
+                        <td>${user.accountNumber}</td>
+                        <td>$${user.balance.toFixed(2)}</td>
+                        <td>${user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewUserDetails('${user.username}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    `;
+                    usersTable.appendChild(row);
+                }
+            }
+        }
+        
+        // Load all transactions
+        function loadAllTransactions() {
+            const allTransactions = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mt5_user_') && !key.endsWith(ADMIN_USERNAME)) {
+                    const user = JSON.parse(localStorage.getItem(key));
+                    
+                    user.accountHistory.forEach(transaction => {
+                        allTransactions.push({
+                            username: user.username,
+                            ...transaction
+                        });
+                    });
+                }
+            }
+            
+            // Sort by date (newest first)
+            allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Populate all transactions table
+            const transactionsTable = document.getElementById('allTransactionsTable');
+            transactionsTable.innerHTML = '';
+            
+            allTransactions.forEach(transaction => {
+                const amountClass = transaction.amount >= 0 ? 'mt5-profit' : 'mt5-loss';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.username}</td>
+                    <td>${transaction.type}</td>
+                    <td class="${amountClass}">${transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}</td>
+                    <td>$${transaction.balance.toFixed(2)}</td>
+                `;
+                transactionsTable.appendChild(row);
+            });
+        }
+        
+        // Approve transaction (deposit or withdrawal)
+        function approveTransaction(username, transactionDate, amount, transactionType) {
+            const user = JSON.parse(localStorage.getItem(`mt5_user_${username}`));
+            
+            // Find and remove pending transaction
+            const transactionIndex = user.accountHistory.findIndex(t => 
+                t.date === transactionDate && t.amount === amount && t.type === transactionType);
+            
+            if (transactionIndex === -1) {
+                alert('Transaction not found');
+                return;
+            }
+            
+            const transaction = user.accountHistory[transactionIndex];
+            const isDeposit = transaction.type.includes('Deposit');
+            
+            // Remove pending transaction
+            user.accountHistory.splice(transactionIndex, 1);
+            
+            // Add approved transaction
+            const approvedType = isDeposit ? 
+                (transaction.method === 'crypto' ? 'Crypto Deposit' : 'Bank Deposit') :
+                `Withdrawal (${transaction.method})`;
+            
+            // Update balance
+            if (isDeposit) {
+                user.balance += amount;
+            } else {
+                user.balance += amount; // amount is negative for withdrawals
+            }
+            
+            user.equity = user.balance;
+            user.freeMargin = user.balance * 0.9;
+            
+            // Add approved transaction to history
+            user.accountHistory.unshift({
+                date: new Date(),
+                type: approvedType,
+                amount: amount,
+                balance: user.balance,
+                details: transaction.details
+            });
+            
+            // Save user
+            localStorage.setItem(`mt5_user_${username}`, JSON.stringify(user));
+            
+            // Reload admin data
+            loadAdminData();
+            
+            alert(`Transaction of $${Math.abs(amount).toFixed(2)} ${isDeposit ? 'deposit' : 'withdrawal'} approved for ${username}`);
+        }
+        
+        // Reject transaction
+        function rejectTransaction(username, transactionDate) {
+            const user = JSON.parse(localStorage.getItem(`mt5_user_${username}`));
+            
+            // Find and remove pending transaction
+            const transactionIndex = user.accountHistory.findIndex(t => t.date === transactionDate);
+            
+            if (transactionIndex === -1) {
+                alert('Transaction not found');
+                return;
+            }
+            
+            const transaction = user.accountHistory[transactionIndex];
+            const isDeposit = transaction.type.includes('Deposit');
+            
+            // Remove pending transaction
+            user.accountHistory.splice(transactionIndex, 1);
+            
+            // Add rejection notice
+            user.accountHistory.unshift({
+                date: new Date(),
+                type: isDeposit ? 'Deposit Rejected' : 'Withdrawal Rejected',
+                amount: 0,
+                balance: user.balance,
+                reason: 'Rejected by admin'
+            });
+            
+            // Save user
+            localStorage.setItem(`mt5_user_${username}`, JSON.stringify(user));
+            
+            // Reload admin data
+            loadAdminData();
+            
+            alert(`Transaction rejected for ${username}`);
+        }
+        
+        // View user details
+        function viewUserDetails(username) {
+            const user = JSON.parse(localStorage.getItem(`mt5_user_${username}`));
+            
+            let details = `
+                <h4>User Details: ${username}</h4>
+                <p><strong>Account Number:</strong> ${user.accountNumber}</p>
+                <p><strong>Balance:</strong> $${user.balance.toFixed(2)}</p>
+                <p><strong>Equity:</strong> $${user.equity.toFixed(2)}</p>
+                <p><strong>Free Margin:</strong> $${user.freeMargin.toFixed(2)}</p>
+                <p><strong>Last Login:</strong> ${user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</p>
+                
+                <h5 class="mt-3">Open Positions</h5>
+            `;
+            
+            if (user.positions.length > 0) {
+                details += '<ul>';
+                user.positions.forEach(pos => {
+                    details += `
+                        <li>
+                            ${pos.type} ${pos.symbol} - ${pos.volume} lots
+                            (Profit: $${pos.profit.toFixed(2)})
+                        </li>
+                    `;
+                });
+                details += '</ul>';
+            } else {
+                details += '<p>No open positions</p>';
+            }
+            
+            alert(details);
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modals when clicking outside
+            window.addEventListener('click', function(event) {
+                if(event.target.className === 'mt5-modal') {
+                    event.target.style.display = 'none';
+                }
+            });
+            
+            // Initialize the app
+            initApp();
+        });
+    </script>
+</body>
+</html>
